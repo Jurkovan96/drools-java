@@ -1,11 +1,19 @@
 package com.techgeeknext.examples.drools.domain;
 
+import javax.persistence.*;
+
+@Entity
 public class Insurance {
+
+    @Id
+    private long id;
 
     public enum InsuranceType {
         LIFE, PROPERTY, VEHICLE
     }
 
+    @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "contract_id")
     private Contract contract;
 
     private String number;

@@ -1,6 +1,13 @@
 package com.techgeeknext.examples.drools.domain;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+@Entity
 public class Discount {
+
+    @Id
+    private long id;
 
     private Double sum;
 

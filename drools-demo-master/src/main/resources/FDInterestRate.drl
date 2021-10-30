@@ -1,5 +1,4 @@
 import  com.techgeeknext.examples.drools.domain.FDRequest;
-import
 
 rule "FD Interest Rate for Citi Bank duration more than 1 year and below 2 years"
     when

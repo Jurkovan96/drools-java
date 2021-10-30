@@ -1,27 +1,36 @@
 package com.techgeeknext.examples.drools.domain;
 
 
+import org.hibernate.annotations.GenericGenerator;
+
+import javax.persistence.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@Entity
 public class Contract {
 
     public enum ContractType {
         SMALL, MEDIUM, LONG
     }
 
+    @Column(name = "active")
     private boolean isActive;
 
+    @Id
+    @GeneratedValue(generator="increment")
+    @GenericGenerator(name="increment", strategy = "increment")
     private Long id;
 
-    private List<Insurance> insuranceList;
+    @OneToMany(mappedBy = "contract", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    private Set<Insurance> insuranceList;
 
-    public List<Discount> discounts;
+    @ManyToMany(fetch = FetchType.LAZY, targetEntity = Contract.class)
+    public Set<Discount> discounts = new HashSet<>();
 
+    @Enumerated(EnumType.STRING)
     public ContractType contractType;
 
     public Date dateStart;
@@ -30,7 +39,6 @@ public class Contract {
 
     public Contract(Long id) {
         this.id = id;
-        this.insuranceList = new ArrayList<>();
         this.isActive = false;
     }
 
@@ -63,22 +71,6 @@ public class Contract {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public List<Insurance> getInsuranceList() {
-        return insuranceList;
-    }
-
-    public void setInsuranceList(List<Insurance> insuranceList) {
-        this.insuranceList = insuranceList;
-    }
-
-    public List<Discount> getDiscounts() {
-        return discounts;
-    }
-
-    public void setDiscounts(List<Discount> discounts) {
-        this.discounts = discounts;
     }
 
     public Date getDateStart() {
