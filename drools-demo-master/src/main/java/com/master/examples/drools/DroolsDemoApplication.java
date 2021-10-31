@@ -1,4 +1,4 @@
-package com.techgeeknext.examples.drools;
+package com.master.examples.drools;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

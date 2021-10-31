@@ -1,0 +1,8 @@
+import com.master.examples.drools.domain.Contract;
+
+rule "Check contarct for insurance"
+    when
+        fdObject : Contract(insuranceSet.size() > 0);
+    then
+        fdObject.setHasInsurance(true);
+end;

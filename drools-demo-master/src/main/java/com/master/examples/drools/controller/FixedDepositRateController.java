@@ -1,17 +1,14 @@
-package com.techgeeknext.examples.drools.controller;
+package com.master.examples.drools.controller;
 
-import com.techgeeknext.examples.drools.domain.Contract;
-import com.techgeeknext.examples.drools.domain.FDRequest;
-import com.techgeeknext.examples.drools.domain.Insurance;
+import com.master.examples.drools.domain.Contract;
+import com.master.examples.drools.domain.FDRequest;
+import com.master.examples.drools.domain.Insurance;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 @RestController
 public class FixedDepositRateController {

@@ -1,4 +1,4 @@
-package com.techgeeknext.examples.drools.config;
+package com.master.examples.drools.config;
 
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
@@ -17,7 +17,7 @@ public class DroolsConfiguration {
     @Bean
     public KieContainer getKieContainer() {
         KieFileSystem kieFileSystem = kieServices.newKieFileSystem();
-        kieFileSystem.write(ResourceFactory.newClassPathResource("FDInterestRate.drl"));
+        kieFileSystem.write(ResourceFactory.newClassPathResource("contractRules.drl"));
         KieBuilder kb = kieServices.newKieBuilder(kieFileSystem);
         kb.buildAll();
         KieModule kieModule = kb.getKieModule();

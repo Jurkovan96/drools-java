@@ -1,4 +1,4 @@
-package com.techgeeknext.examples.drools.domain;
+package com.master.examples.drools.domain;
 
 public class FDRequest {
     private String bankName;

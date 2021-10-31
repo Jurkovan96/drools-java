@@ -1,6 +1,10 @@
-package com.techgeeknext.examples.drools.domain;
+package com.master.examples.drools.domain;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class Insurance {
@@ -20,9 +24,19 @@ public class Insurance {
 
     private InsuranceType insuranceType;
 
+    @ManyToMany
+    @JoinTable(name = "discount_insuranceSet",
+            joinColumns = @JoinColumn(name = "discount_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "insurance_id", referencedColumnName = "id"))
+    private Set<Discount> discountSet = new HashSet<>();
+
     private Double sumInsured;
 
     private boolean activePayment;
+
+    @OneToMany(mappedBy = "insurance")
+    @JsonIgnoreProperties("insurance")
+    private Set<InsuranceProduct> insuranceProducts = new HashSet<>();
 
     public Insurance(Contract contract, String number, InsuranceType insuranceType, Double sumInsured) {
         this.number = number;
@@ -71,5 +85,32 @@ public class Insurance {
 
     public void setActivePayment(boolean activePayment) {
         this.activePayment = activePayment;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public Set<Discount> getDiscountSet() {
+        return discountSet;
+    }
+
+    public void setDiscountSet(Set<Discount> discountSet) {
+        this.discountSet = discountSet;
+    }
+
+    public Set<InsuranceProduct> getInsuranceProducts() {
+        return insuranceProducts;
+    }
+
+    public void setInsuranceProducts(Set<InsuranceProduct> insuranceProducts) {
+        this.insuranceProducts = insuranceProducts;
+    }
+
+    public Insurance() {
     }
 }
