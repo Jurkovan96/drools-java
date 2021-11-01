@@ -8,9 +8,10 @@ import java.util.Objects
 import java.util.Collections
 import java.util.HashSet
 import java.util.Arrays
-import lombok.var
 
-
+/**
+Rule 1
+**/
 rule "Check contract for any insurance"
     when
         fdObject : Contract(insuranceSet.size() > 0);
@@ -18,12 +19,78 @@ rule "Check contract for any insurance"
         fdObject.setHasInsurance(true);
 end;
 
+/**
+Rule 2
+**/
+rule "Check insurance if active insurance"
+    when
+        insuranceObj : Insurance()
+        eval(checkForActiveInsurance(insuranceObj) == true)
+    then
+        insuranceObj.setActivePayment(true);
+end;
+
+/**
+Rule 3
+**/
+rule "Check for discount on contract"
+    when
+        contractObj : Contract()
+        eval(checkForDiscount(contractObj) == true)
+    then
+        createDiscount(contractObj);
+
+end;
+
+/**
+Rule 4
+**/
 rule "Check contract for active insurance"
     when
         contractObject : Contract(isActive() == true)
     then
         checkForDueDateOnInsurance(contractObject);
-        System.out.println("This is a system.out from drl 0---------------------------------> " + contractObject.isActive());
+end;
+
+/**
+Rule 5
+**/
+rule "Calculate the total sum on Insurance Object"
+    when
+        isuranceObj : Insurance()
+    then
+        updateInsuranceTotalSum(isuranceObj);
+end;
+
+
+/**
+Rule 6
+**/
+rule "Add product minimum starting value for insurance type - TYPE.VEHICLE"
+    when
+        productObj : Product(productType == Product.ProductType.VEHICLE);
+    then
+        productObj.setProductSum(15.0);
+end;
+
+/**
+Rule 7
+**/
+rule "Add product minimum starting value for insurance type - TYPE.HOUSE"
+    when
+        productObj : Product(productType == Product.ProductType.HOUSE);
+    then
+        productObj.setProductSum(25.0);
+end;
+
+/**
+Rule 8
+**/
+rule "Add product minimum starting value for insurance type - TYPE.LIFE"
+    when
+        productObj : Product(productType == Product.ProductType.LIFE);
+    then
+        productObj.setProductSum(45.0);
 end;
 
 function void checkForDueDateOnInsurance(Contract contract){
@@ -50,7 +117,7 @@ return contract.getInsuranceSet().stream().anyMatch(insurance ->
 insurance.getInsuranceType() == Insurance.InsuranceType.LIFE && insurance.getInsuranceType() == Insurance.InsuranceType.VEHICLE);
 }
 
-function void createDicount(Contract contract){
+function void createDiscount(Contract contract){
 contract.getInsuranceSet().forEach(insurance -> {
 Discount discount = new Discount();
 discount.setInsuranceSet(new HashSet<>(Collections.singletonList(insurance)));
@@ -69,28 +136,8 @@ insurance.setSumInsured(total);
 }
 }
 
-rule "Add product minimum starting value for insurance type - TYPE.VEHICLE"
-    when
-        productObj : Product(productType == Product.ProductType.VEHICLE);
-    then
-        productObj.setProductSum(15.0);
-end;
+function void doSomething(){
 
-rule "Add product minimum starting value for insurance type - TYPE.HOUSE"
-    when
-        productObj : Product(productType == Product.ProductType.HOUSE);
-    then
-        productObj.setProductSum(25.0);
-end;
-
-rule "Add product minimum starting value for insurance type - TYPE.LIFE"
-    when
-        productObj : Product(productType == Product.ProductType.LIFE);
-    then
-        productObj.setProductSum(45.0);
-end;
-
-
-
+}
 
 
