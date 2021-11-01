@@ -1,12 +1,73 @@
 import com.master.examples.drools.model.Contract;
 import com.master.examples.drools.model.Product;
+import com.master.examples.drools.model.Insurance
+import com.master.examples.drools.model.NotificationPayment
+import com.master.examples.drools.model.Discount
+import com.master.examples.drools.model.InsuranceProduct
+import java.util.Objects
+import java.util.Collections
+import java.util.HashSet
+import java.util.Arrays
+import lombok.var
 
-rule "Check contarct for insurance"
+
+rule "Check contract for any insurance"
     when
-        fdObject : Contract(insuranceSet.size() == 0);
+        fdObject : Contract(insuranceSet.size() > 0);
     then
         fdObject.setHasInsurance(true);
 end;
+
+rule "Check contract for active insurance"
+    when
+        contractObject : Contract(isActive() == true)
+    then
+        checkForDueDateOnInsurance(contractObject);
+        System.out.println("This is a system.out from drl 0---------------------------------> " + contractObject.isActive());
+end;
+
+function void checkForDueDateOnInsurance(Contract contract){
+contract
+        .getInsuranceSet()
+        .forEach(insurance -> {
+        if(!insurance.isActivePayment()){
+        NotificationPayment payment = new NotificationPayment();
+        payment.setInsurance(insurance);
+        payment.setDueDate(contract.getContractEndDate());
+        System.out.println("New insurance notification!" + payment.toString());
+
+        }else{
+        System.out.println("No active insurance on the contract!");
+        }
+        });
+}
+function boolean checkForActiveInsurance(Insurance insurance){
+return insurance.getInsuranceProducts().stream().anyMatch(Objects::nonNull);
+}
+
+function boolean checkForDiscount(Contract contract){
+return contract.getInsuranceSet().stream().anyMatch(insurance ->
+insurance.getInsuranceType() == Insurance.InsuranceType.LIFE && insurance.getInsuranceType() == Insurance.InsuranceType.VEHICLE);
+}
+
+function void createDicount(Contract contract){
+contract.getInsuranceSet().forEach(insurance -> {
+Discount discount = new Discount();
+discount.setInsuranceSet(new HashSet<>(Collections.singletonList(insurance)));
+discount.setPercentage(insurance.getSumInsured()*0.1);
+insurance.setDiscountSet(new HashSet<>(Collections.singletonList(discount)));
+});
+}
+
+function void updateInsuranceTotalSum(Insurance insurance){
+Double total = 0.0;
+for(InsuranceProduct insuranceProducts: insurance.getInsuranceProducts()) {
+    total += insuranceProducts.getProduct().getProductSum();
+}
+if(total != 0){
+insurance.setSumInsured(total);
+}
+}
 
 rule "Add product minimum starting value for insurance type - TYPE.VEHICLE"
     when
@@ -28,3 +89,8 @@ rule "Add product minimum starting value for insurance type - TYPE.LIFE"
     then
         productObj.setProductSum(45.0);
 end;
+
+
+
+
+

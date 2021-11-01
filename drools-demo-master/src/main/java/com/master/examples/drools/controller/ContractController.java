@@ -36,13 +36,13 @@ public class ContractController {
         return contarctServiceImp
                 .getAll()
                 .stream()
+                .filter(Objects::nonNull)
                 .peek(contract -> {
                     kieSession.insert(contract);
                     kieSession.fireAllRules();
                     kieSession.dispose();
                     logger.info("KieSession {}", kieSession.getClass().getName());
                 })
-                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 

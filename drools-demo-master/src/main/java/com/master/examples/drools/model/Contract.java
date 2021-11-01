@@ -30,6 +30,7 @@ public class Contract {
 
     @OneToMany(mappedBy = "contract", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JsonIgnoreProperties("contact")
+    //@JsonIgnore
     private final Set<Insurance> insuranceSet = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
@@ -46,7 +47,6 @@ public class Contract {
 
     public Contract(Long id) {
         this.id = id;
-        this.isActive = false;
     }
 
     @JsonIgnore
@@ -99,6 +99,10 @@ public class Contract {
         } catch (ParseException parseException) {
             this.endDate = new Date();
         }
+    }
+
+    public Date getContractEndDate(){
+        return endDate;
     }
 
     public String getEndDate() {

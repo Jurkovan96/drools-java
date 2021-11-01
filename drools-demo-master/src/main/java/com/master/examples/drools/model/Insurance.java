@@ -1,6 +1,7 @@
 package com.master.examples.drools.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -10,6 +11,8 @@ import java.util.Set;
 public class Insurance {
 
     @Id
+    @GeneratedValue(generator = "increment")
+    @GenericGenerator(name = "increment", strategy = "increment")
     private long id;
 
     public enum InsuranceType {
@@ -18,6 +21,7 @@ public class Insurance {
 
     @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "contract_id")
+    @JsonIgnoreProperties("insuranceSet")
     private Contract contract;
 
     private String number;
@@ -36,6 +40,8 @@ public class Insurance {
 
     private boolean activePayment;
 
+    private boolean status;
+
     @OneToMany(mappedBy = "insurance")
     @JsonIgnoreProperties("insurance")
     private Set<InsuranceProduct> insuranceProducts = new HashSet<>();
@@ -44,7 +50,6 @@ public class Insurance {
         this.number = number;
         this.insuranceType = insuranceType;
         this.sumInsured = sumInsured;
-        this.activePayment = false;
         this.contract = contract;
     }
 
@@ -81,7 +86,6 @@ public class Insurance {
     }
 
     public boolean isActivePayment() {
-        activePayment = contract.isActive();
         return activePayment;
     }
 
@@ -114,5 +118,20 @@ public class Insurance {
     }
 
     public Insurance() {
+    }
+
+    @Override
+    public String toString() {
+        return "Insurance{" +
+                "id=" + id +
+                ", contract=" + contract +
+                ", number='" + number + '\'' +
+                ", insuranceType=" + insuranceType +
+                ", discountSet=" + discountSet +
+                ", sumInsured=" + sumInsured +
+                ", activePayment=" + activePayment +
+                ", status=" + status +
+                ", insuranceProducts=" + insuranceProducts +
+                '}';
     }
 }
