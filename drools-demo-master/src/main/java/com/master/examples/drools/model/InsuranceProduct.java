@@ -1,5 +1,6 @@
 package com.master.examples.drools.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -15,10 +16,12 @@ public class InsuranceProduct {
 
     @ManyToOne
     @JoinColumn(name = "insurance_id")
+    @JsonIgnoreProperties("insuranceProducts")
     private Insurance insurance;
 
     @ManyToOne
     @JoinColumn(name = "product_id")
+    @JsonIgnoreProperties("insuranceSet")
     private Product product;
 
     @Column(name = "sum_insured")

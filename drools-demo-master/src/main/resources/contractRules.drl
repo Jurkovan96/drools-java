@@ -14,7 +14,7 @@ Rule 1
 **/
 rule "Check contract for any insurance"
     when
-        fdObject : Contract(insuranceSet.size() > 0);
+        fdObject : Contract(insuranceSet.size() > 0)
     then
         fdObject.setHasInsurance(true);
 end;
@@ -68,7 +68,7 @@ Rule 6
 **/
 rule "Add product minimum starting value for insurance type - TYPE.VEHICLE"
     when
-        productObj : Product(productType == Product.ProductType.VEHICLE);
+        productObj : Product(productType == Product.ProductType.VEHICLE)
     then
         productObj.setProductSum(15.0);
 end;
@@ -78,7 +78,7 @@ Rule 7
 **/
 rule "Add product minimum starting value for insurance type - TYPE.HOUSE"
     when
-        productObj : Product(productType == Product.ProductType.HOUSE);
+        productObj : Product(productType == Product.ProductType.HOUSE)
     then
         productObj.setProductSum(25.0);
 end;
@@ -88,10 +88,21 @@ Rule 8
 **/
 rule "Add product minimum starting value for insurance type - TYPE.LIFE"
     when
-        productObj : Product(productType == Product.ProductType.LIFE);
+        productObj : Product(productType == Product.ProductType.LIFE)
     then
         productObj.setProductSum(45.0);
 end;
+
+/**
+Rule 9
+**/
+rule "Calculate sum on InsuranceProduct level"
+    when
+        insuranceObj: Insurance()
+    then
+        calculateSumOnInsuranceProduct(insuranceObj);
+end;
+
 
 function void checkForDueDateOnInsurance(Contract contract){
 contract
@@ -128,16 +139,35 @@ insurance.setDiscountSet(new HashSet<>(Collections.singletonList(discount)));
 
 function void updateInsuranceTotalSum(Insurance insurance){
 Double total = 0.0;
-for(InsuranceProduct insuranceProducts: insurance.getInsuranceProducts()) {
-    total += insuranceProducts.getProduct().getProductSum();
+for(InsuranceProduct insuranceProduct: insurance.getInsuranceProducts()) {
+    total +=  insuranceProduct.getSumInsured();
+
+
+    //System.out.println("Hello from updateInsuranceTotalSum Method!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 }
 if(total != 0){
 insurance.setSumInsured(total);
 }
 }
 
-function void doSomething(){
-
+function void calculateSumOnInsuranceProduct(Insurance insurance){
+Double insuranceProductLevelSum = 0.0;
+for(InsuranceProduct insuranceProduct : insurance.getInsuranceProducts()){
+insuranceProductLevelSum = insuranceProduct.getProduct().getProductSum();
+System.out.println("In method calculateSumOnInsuranceProduct ------------------------> OK");
+switch (insurance.getInsuranceType()){
+case LIFE:
+System.out.println("On switch branch -----------> OK");
+insuranceProductLevelSum += 20.0;
+break;
+case VEHICLE:
+insuranceProductLevelSum += 25.0;
+break;
+case PROPERTY:
+insuranceProductLevelSum += 15.0;
+break;
 }
-
+insuranceProduct.setSumInsured(insuranceProductLevelSum);
+}
+}
 
