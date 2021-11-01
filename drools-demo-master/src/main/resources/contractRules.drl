@@ -1,8 +1,30 @@
-import com.master.examples.drools.domain.Contract;
+import com.master.examples.drools.model.Contract;
+import com.master.examples.drools.model.Product;
 
 rule "Check contarct for insurance"
     when
-        fdObject : Contract(insuranceSet.size() > 0);
+        fdObject : Contract(insuranceSet.size() == 0);
     then
         fdObject.setHasInsurance(true);
+end;
+
+rule "Add product minimum starting value for insurance type - TYPE.VEHICLE"
+    when
+        productObj : Product(productType == Product.ProductType.VEHICLE);
+    then
+        productObj.setProductSum(15.0);
+end;
+
+rule "Add product minimum starting value for insurance type - TYPE.HOUSE"
+    when
+        productObj : Product(productType == Product.ProductType.HOUSE);
+    then
+        productObj.setProductSum(25.0);
+end;
+
+rule "Add product minimum starting value for insurance type - TYPE.LIFE"
+    when
+        productObj : Product(productType == Product.ProductType.LIFE);
+    then
+        productObj.setProductSum(45.0);
 end;

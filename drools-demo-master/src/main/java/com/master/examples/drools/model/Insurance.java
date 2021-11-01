@@ -1,4 +1,4 @@
-package com.master.examples.drools.domain;
+package com.master.examples.drools.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -22,12 +22,14 @@ public class Insurance {
 
     private String number;
 
+    @Enumerated(EnumType.STRING)
     private InsuranceType insuranceType;
 
     @ManyToMany
-    @JoinTable(name = "discount_insuranceSet",
+    @JoinTable(name = "discount_insurance",
             joinColumns = @JoinColumn(name = "discount_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "insurance_id", referencedColumnName = "id"))
+    @JsonIgnoreProperties("insuranceSet")
     private Set<Discount> discountSet = new HashSet<>();
 
     private Double sumInsured;

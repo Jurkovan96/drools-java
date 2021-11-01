@@ -1,9 +1,10 @@
 package com.master.examples.drools.controller;
 
 import com.master.examples.drools.service.ContarctServiceImp;
-import com.master.examples.drools.domain.Contract;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,8 @@ public class ContractController {
 
     private final KieContainer kieContainer;
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Autowired
     public ContractController(ContarctServiceImp contarctServiceImp, KieContainer kieContainer) {
         this.contarctServiceImp = contarctServiceImp;
@@ -29,29 +32,32 @@ public class ContractController {
 
     @GetMapping("/contracts")
     public Collection<?> getAllContracts(@RequestParam(name = "limit", required = false) Integer limit) {
-        return contarctServiceImp.getAll()
+        KieSession kieSession = kieContainer.newKieSession();
+        return contarctServiceImp
+                .getAll()
                 .stream()
+                .peek(contract -> {
+                    kieSession.insert(contract);
+                    kieSession.fireAllRules();
+                    kieSession.dispose();
+                    logger.info("KieSession {}", kieSession.getClass().getName());
+                })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/contract/{contractId}")
     public ResponseEntity<?> getContractById(@PathVariable long contractId) {
+        KieSession kieSession = kieContainer.newKieSession();
         return contarctServiceImp
                 .getById(contractId)
-                .map(contract -> ResponseEntity.ok().body(contract))
+                .map(contract -> {
+                    kieSession.insert(contract);
+                    kieSession.fireAllRules();
+                    kieSession.dispose();
+                    return ResponseEntity.ok().body(contract);
+                })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .build());
     }
-
-    @GetMapping("/drl/contract/{contractId}")
-    public ResponseEntity<?> getContarctWithRules(@PathVariable long contractId) {
-        Contract contract = (Contract) contarctServiceImp.getById(contractId).get();
-        KieSession kieSession = kieContainer.newKieSession();
-        kieSession.insert(contract);
-        kieSession.fireAllRules();
-        kieSession.dispose();
-        return ResponseEntity.ok().body(contract);
-    }
-
 }

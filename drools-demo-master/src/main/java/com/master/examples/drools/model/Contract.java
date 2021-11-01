@@ -1,4 +1,4 @@
-package com.master.examples.drools.domain;
+package com.master.examples.drools.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

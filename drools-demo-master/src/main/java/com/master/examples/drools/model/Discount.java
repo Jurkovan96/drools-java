@@ -1,4 +1,4 @@
-package com.master.examples.drools.domain;
+package com.master.examples.drools.model;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -16,10 +16,7 @@ public class Discount {
 
     private Double percentage;
 
-    @ManyToMany
-    @JoinTable(name = "discount_insuranceSet",
-            joinColumns = @JoinColumn(name = "discount_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "insurance_id", referencedColumnName = "id"))
+    @ManyToMany(mappedBy = "discountSet")
     private Set<Insurance> insuranceSet = new HashSet<>();
 
     public void setInsuranceSet(Set<Insurance> insuranceSet) {

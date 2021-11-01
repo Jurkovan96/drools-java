@@ -1,6 +1,10 @@
-package com.master.examples.drools.domain;
+package com.master.examples.drools.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -8,6 +12,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Builder(access = AccessLevel.PUBLIC, toBuilder = true)
+@AllArgsConstructor
 public class Product {
 
     public enum ProductType {
@@ -28,8 +34,8 @@ public class Product {
     @JsonIgnoreProperties("product")
     private Set<InsuranceProduct> insuranceSet = new HashSet<>();
 
-    @Transient
-    private Double minSum;
+    @Column(name = "starting_sum")
+    private Double productSum;
 
     public Product() {
     }
@@ -66,11 +72,28 @@ public class Product {
         this.insuranceSet = insuranceSet;
     }
 
-    public Double getMinSum() {
-        return minSum;
+
+    public Double getProductSum() {
+        return productSum;
     }
 
-    public void setMinSum(Double minSum) {
-        this.minSum = minSum;
+    public void setProductSum(Double productSum) {
+        this.productSum = productSum;
+    }
+
+    @Override
+    public String toString() {
+        return "Product{" +
+                "id=" + id +
+                ", productName='" + productName + '\'' +
+                ", productType=" + productType +
+                ", insuranceSet=" + insuranceSet +
+                ", productSum=" + productSum +
+                '}';
+    }
+
+    public Product(String productName, ProductType productType) {
+        this.productName = productName;
+        this.productType = productType;
     }
 }

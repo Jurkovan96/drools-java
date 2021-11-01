@@ -1,8 +1,8 @@
 package com.master.examples.drools.controller;
 
-import com.master.examples.drools.domain.Contract;
-import com.master.examples.drools.domain.FDRequest;
-import com.master.examples.drools.domain.Insurance;
+import com.master.examples.drools.model.Contract;
+import com.master.examples.drools.model.FDRequest;
+import com.master.examples.drools.model.Insurance;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.springframework.http.ResponseEntity;
