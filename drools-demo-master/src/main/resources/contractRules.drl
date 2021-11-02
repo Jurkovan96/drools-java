@@ -1,22 +1,36 @@
 import com.master.examples.drools.model.Contract;
+import com.master.examples.drools.model.Person;
 import com.master.examples.drools.model.Product;
 import com.master.examples.drools.model.Insurance
 import com.master.examples.drools.model.NotificationPayment
 import com.master.examples.drools.model.Discount
 import com.master.examples.drools.model.InsuranceProduct
+import com.master.examples.drools.config.Util;
 import java.util.Objects
 import java.util.Collections
+import java.util.Collection
+import java.lang.Double
+import java.lang.String
 import java.util.HashSet
 import java.util.Arrays
+import java.util.ArrayList
+import java.util.Set
+import java.lang.reflect.Array
+import java.util.Map
+import java.util.HashMap
+import com.graphbuilder.math.func.EFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory
+import java.util.List;
 
 /**
 Rule 1
 **/
 rule "Check contract for any insurance"
     when
-        fdObject : Contract(insuranceSet.size() > 0)
+        contractObj : Contract(insuranceSet.size() > 0)
     then
-        fdObject.setHasInsurance(true);
+        contractObj.setHasInsurance(true);
 end;
 
 /**
@@ -38,8 +52,7 @@ rule "Check for discount on contract"
         contractObj : Contract()
         eval(checkForDiscount(contractObj) == true)
     then
-        createDiscount(contractObj);
-
+        createDiscount(contractObj, determineContratDiscount(contractObj));
 end;
 
 /**
@@ -47,7 +60,7 @@ Rule 4
 **/
 rule "Check contract for active insurance"
     when
-        contractObject : Contract(isActive() == true)
+        contractObject : Contract()
     then
         checkForDueDateOnInsurance(contractObject);
 end;
@@ -104,16 +117,37 @@ rule "Calculate sum on InsuranceProduct level"
 end;
 
 
+/**
+Rule 10
+**/
+rule "Check for active contracts on hoder's side"
+    when
+        personObj : Person()
+    then
+        personObj.setContractList(getActiveContractsForHolder(personObj));
+end;
+
+/**
+Rule 11
+**/
+rule "Create "
+    when
+
+    then
+
+end;
+
+
+
 function void checkForDueDateOnInsurance(Contract contract){
 contract
         .getInsuranceSet()
         .forEach(insurance -> {
-        if(!insurance.isActivePayment()){
-        NotificationPayment payment = new NotificationPayment();
-        payment.setInsurance(insurance);
-        payment.setDueDate(contract.getContractEndDate());
-        System.out.println("New insurance notification!" + payment.toString());
-
+        if(insurance.isActivePayment()){
+        NotificationPayment notificationPayment = new NotificationPayment();
+        notificationPayment.setInsurance(insurance);
+        notificationPayment.setDueDate(contract.getContractEndDate());
+        System.out.println("New insurance notification!" + notificationPayment.toString());
         }else{
         System.out.println("No active insurance on the contract!");
         }
@@ -124,15 +158,32 @@ return insurance.getInsuranceProducts().stream().anyMatch(Objects::nonNull);
 }
 
 function boolean checkForDiscount(Contract contract){
-return contract.getInsuranceSet().stream().anyMatch(insurance ->
-insurance.getInsuranceType() == Insurance.InsuranceType.LIFE && insurance.getInsuranceType() == Insurance.InsuranceType.VEHICLE);
+System.out.println("In discount method!--------------->");
+Long lifeInsurance = contract.getInsuranceSet().stream().filter(insurance ->
+insurance.getInsuranceType() == Insurance.InsuranceType.LIFE).count();
+
+Long vehicleInsurance = contract.getInsuranceSet().stream().filter(insurance ->
+insurance.getInsuranceType() == Insurance.InsuranceType.VEHICLE).count();
+
+Long propertyInsurance = contract.getInsuranceSet().stream().filter(insurance ->
+insurance.getInsuranceType() == Insurance.InsuranceType.PROPERTY).count();
+
+System.out.println("The contract has the followings: " + lifeInsurance + " " + vehicleInsurance + " "
++ propertyInsurance);
+//return Arrays.asList(lifeInsurance, propertyInsurance, vehicleInsurance);
+return (lifeInsurance >= 1 && vehicleInsurance >= 1) || (lifeInsurance >= 1 && propertyInsurance >= 1);
+
 }
 
-function void createDiscount(Contract contract){
+function void createDiscount(Contract contract, List insuranceType){
 contract.getInsuranceSet().forEach(insurance -> {
 Discount discount = new Discount();
 discount.setInsuranceSet(new HashSet<>(Collections.singletonList(insurance)));
-discount.setPercentage(insurance.getSumInsured()*0.1);
+
+double life = (Double) insuranceType.get(0) * Util.LIFE_DISCOUNT;
+double veh = (Double) insuranceType.get(1) * Util.VEHICLE_DISCOUNT;
+double prop = (Double) insuranceType.get(2) * Util.PROPERTY_DISCOUNT;
+discount.setPercentage(life + veh + prop);
 insurance.setDiscountSet(new HashSet<>(Collections.singletonList(discount)));
 });
 }
@@ -141,12 +192,10 @@ function void updateInsuranceTotalSum(Insurance insurance){
 Double total = 0.0;
 for(InsuranceProduct insuranceProduct: insurance.getInsuranceProducts()) {
     total +=  insuranceProduct.getSumInsured();
-
-
-    //System.out.println("Hello from updateInsuranceTotalSum Method!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 }
 if(total != 0){
 insurance.setSumInsured(total);
+System.out.println("Total value on insurance : " + total);
 }
 }
 
@@ -157,13 +206,15 @@ insuranceProductLevelSum = insuranceProduct.getProduct().getProductSum();
 System.out.println("In method calculateSumOnInsuranceProduct ------------------------> OK");
 switch (insurance.getInsuranceType()){
 case LIFE:
-System.out.println("On switch branch -----------> OK");
+System.out.println("On switch branch LIFE -------------> OK");
 insuranceProductLevelSum += 20.0;
 break;
 case VEHICLE:
+System.out.println("On switch branch VEHICLE ----------> OK");
 insuranceProductLevelSum += 25.0;
 break;
 case PROPERTY:
+System.out.println("On switch branch PROPERTY ---------> OK");
 insuranceProductLevelSum += 15.0;
 break;
 }
@@ -171,3 +222,50 @@ insuranceProduct.setSumInsured(insuranceProductLevelSum);
 }
 }
 
+function Set<Contract> getActiveContractsForHolder(Person person){
+ Set<Contract> contractSet = new HashSet<>();
+ for(Contract contract: person.getContractList()){
+ if (contract.isActive() && contract.isHasInsurance()){
+ contractSet.add(contract);
+ }
+ }
+ return contractSet;
+}
+
+function List determineContratDiscount(Contract contract){
+System.out.println("In discount method!--------------->");
+List<Double> insuranceArray = new ArrayList<>();
+Long lifeInsurance = contract.getInsuranceSet().stream().filter(insurance ->
+insurance.getInsuranceType() == Insurance.InsuranceType.LIFE).count();
+
+Long vehicleInsurance = contract.getInsuranceSet().stream().filter(insurance ->
+insurance.getInsuranceType() == Insurance.InsuranceType.VEHICLE).count();
+
+Long propertyInsurance = contract.getInsuranceSet().stream().filter(insurance ->
+insurance.getInsuranceType() == Insurance.InsuranceType.PROPERTY).count();
+
+System.out.println("The contract has the followings: " + lifeInsurance + " " + vehicleInsurance + " "
++ propertyInsurance);
+
+insuranceArray.add(lifeInsurance.doubleValue());
+insuranceArray.add(vehicleInsurance.doubleValue());
+insuranceArray.add(propertyInsurance.doubleValue());
+return insuranceArray;
+}
+
+//
+//function void checkPaidInsurance(NotificationPayment notification){
+//
+//}
+//
+//function boolean disableInsuranceIfNotPaid(){
+//
+//}
+//
+//function void getPendingNotifications(){
+//
+//}
+//
+//function void doSomething(){
+//
+//}

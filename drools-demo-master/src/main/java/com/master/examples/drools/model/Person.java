@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,7 +59,7 @@ public class Person {
         return contractList;
     }
 
-    public void setContractList(Set<Contract> contractList) {
-        this.contractList = contractList;
+    public void setContractList(Collection contractList) {
+        this.contractList = (Set<Contract>) contractList;
     }
 }

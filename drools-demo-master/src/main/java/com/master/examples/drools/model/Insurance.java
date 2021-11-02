@@ -53,6 +53,10 @@ public class Insurance {
         this.contract = contract;
     }
 
+    @OneToOne(mappedBy = "insurance")
+    @JsonIgnoreProperties("insurance")
+    private NotificationPayment notificationPayment;
+
     public Contract getContract() {
         return contract;
     }

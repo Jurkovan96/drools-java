@@ -1,14 +1,15 @@
 package com.master.examples.drools.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Entity
 public class Contract {
@@ -47,13 +48,6 @@ public class Contract {
 
     public Contract(Long id) {
         this.id = id;
-    }
-
-    @JsonIgnore
-    public List<Insurance> getAllActiveInsurance() {
-        return insuranceSet.stream()
-                .filter(Insurance::isActivePayment)
-                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public boolean isActive() {
@@ -101,7 +95,7 @@ public class Contract {
         }
     }
 
-    public Date getContractEndDate(){
+    public Date getContractEndDate() {
         return endDate;
     }
 
