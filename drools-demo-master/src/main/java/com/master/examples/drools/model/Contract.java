@@ -8,7 +8,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 @Entity
@@ -24,6 +23,12 @@ public class Contract {
     @Transient
     private boolean hasInsurance;
 
+    @Transient
+    private boolean isDue;
+
+    @Transient
+    private double contractDiscount;
+
     @Id
     @GeneratedValue(generator = "increment")
     @GenericGenerator(name = "increment", strategy = "increment")
@@ -31,8 +36,7 @@ public class Contract {
 
     @OneToMany(mappedBy = "contract", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JsonIgnoreProperties("contact")
-    //@JsonIgnore
-    private final Set<Insurance> insuranceSet = new HashSet<>();
+    private Set<Insurance> insuranceSet = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     private ContractType contractType;
@@ -138,11 +142,31 @@ public class Contract {
     public Contract() {
     }
 
+    public boolean isDue() {
+        return isDue;
+    }
+
+    public void setDue(boolean due) {
+        isDue = due;
+    }
+
     public boolean isHasInsurance() {
         return hasInsurance;
     }
 
     public void setHasInsurance(boolean hasInsurance) {
         this.hasInsurance = hasInsurance;
+    }
+
+    public double getContractDiscount() {
+        return contractDiscount;
+    }
+
+    public void setContractDiscount(double contractDiscount) {
+        this.contractDiscount = contractDiscount;
+    }
+
+    public void setInsuranceSet(Set<Insurance> insuranceSet) {
+        this.insuranceSet = insuranceSet;
     }
 }

@@ -1,5 +1,6 @@
 package com.master.examples.drools.service;
 
+import com.master.examples.drools.model.Contract;
 import com.master.examples.drools.repository.ContractRepository;
 import com.master.examples.drools.service.serviceImp.CRUDService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,5 +32,9 @@ public class ContarctServiceImp implements CRUDService {
     @Override
     public void deleteById(long id) {
         contractRepository.deleteById(id);
+    }
+
+    public void save(Object contract) {
+        contractRepository.save((Contract) contract);
     }
 }

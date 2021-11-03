@@ -5,6 +5,7 @@ import com.master.examples.drools.model.Insurance
 import com.master.examples.drools.model.NotificationPayment
 import com.master.examples.drools.model.Discount
 import com.master.examples.drools.model.InsuranceProduct
+import com.master.examples.drools.controller.ContractController
 import com.master.examples.drools.config.Util;
 import java.util.Objects
 import java.util.Collections
@@ -21,16 +22,26 @@ import java.util.HashMap
 import com.graphbuilder.math.func.EFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory
-import java.util.List;
-
+import java.util.List
+import java.util.Date
+import com.master.examples.drools.model.Payment
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import com.master.examples.drools.model.ContractDiscount
+import org.apache.commons.compress.utils.Sets
+import java.util.stream.Collectors;
+global java.util.Set newSet;
 /**
 Rule 1
 **/
 rule "Check contract for any insurance"
     when
-        contractObj : Contract(insuranceSet.size() > 0)
+        contractObj : Contract(insuranceSet != null)
+        discriminatorObj : String()
+        eval(discriminatorObj == "allContracts")
     then
         contractObj.setHasInsurance(true);
+        retract(contractObj);
 end;
 
 /**
@@ -38,8 +49,9 @@ Rule 2
 **/
 rule "Check insurance if active insurance"
     when
-        insuranceObj : Insurance()
-        eval(checkForActiveInsurance(insuranceObj) == true)
+        insuranceObj : Insurance(getInsuranceProducts() != null)
+        discriminatorObj : String()
+        eval(checkForActiveInsurance(insuranceObj) == true && discriminatorObj == "contract")
     then
         insuranceObj.setActivePayment(true);
 end;
@@ -50,29 +62,36 @@ Rule 3
 rule "Check for discount on contract"
     when
         contractObj : Contract()
-        eval(checkForDiscount(contractObj) == true)
+        discriminatorObj : String()
+        eval(checkForDiscount(contractObj) == true && discriminatorObj == "contract")
     then
         createDiscount(contractObj, determineContratDiscount(contractObj));
 end;
 
+
 /**
 Rule 4
 **/
-rule "Check contract for active insurance"
+rule "Check if contract is due for notification"
     when
         contractObject : Contract()
+        discriminatorObj : String()
+        eval(discriminatorObj == "ceva")
     then
-        checkForDueDateOnInsurance(contractObject);
+        contractObject.setDue(true);
 end;
+
 
 /**
 Rule 5
 **/
-rule "Calculate the total sum on Insurance Object"
+rule "Check contract for notification on insurance"
     when
-        isuranceObj : Insurance()
+        contractObject : Contract(insuranceSet != null)
+        discriminatorObj : String()
+        eval(discriminatorObj == "notifications")
     then
-        updateInsuranceTotalSum(isuranceObj);
+        insert(retriveNotifications(contractObject));
 end;
 
 
@@ -111,32 +130,155 @@ Rule 9
 **/
 rule "Calculate sum on InsuranceProduct level"
     when
-        insuranceObj: Insurance()
+        insuranceObj: Insurance(insuranceProducts != null)
+        discriminatorObj : String()
+        eval(discriminatorObj == "insuranceProducts")
     then
         calculateSumOnInsuranceProduct(insuranceObj);
-end;
 
+end;
 
 /**
 Rule 10
 **/
-rule "Check for active contracts on hoder's side"
+rule "Calculate the total sum on Insurance Object"
     when
-        personObj : Person()
+        insuranceObj : Insurance(notificationPayment != null)
+        discriminatorObj : String()
+        eval(discriminatorObj == "insuranceSum")
     then
-        personObj.setContractList(getActiveContractsForHolder(personObj));
+        updateInsuranceTotalSum(insuranceObj);
 end;
 
 /**
 Rule 11
 **/
-rule "Create "
+rule "Check for active contracts on holder's side"
     when
-
+        personObj : Person(contractList != null)
     then
-
+        personObj.setContractList(getActiveContractsForHolder(personObj));
 end;
 
+/**
+Rule 12
+**/
+rule "Create payment for insurance"
+    when
+        discriminatorObj : String()
+        eval(discriminatorObj == "contract")
+        contractObj : Contract(insuranceSet != null)
+        loggerObj : Logger()
+    then
+       insert(createNewPaymentRequest2(contractObj, loggerObj));
+end;
+
+
+/**
+Rule 13
+**/
+rule "Check for contract suspention"
+    when
+        paymentSet : Set(size() > 0)
+        logger : Logger()
+    then
+        suspendContract(paymentSet, logger);
+        retract(paymentSet);
+end;
+
+
+/**
+Rule 14
+**/
+rule "Test notification trigger"
+    when
+        notificationSetObj : Set(size() > 0)
+    then
+        clearPaymentOnContract(notificationSetObj);
+end;
+
+/**
+Rule 15
+**/
+rule "Start flow rule"
+    when
+        discriminatorObj: String()
+        eval(discriminatorObj == "start")
+        contractObj : Contract()
+        typeContract : Integer()
+
+    then
+        String trigger = "firstRule";
+        insert(retriveContract(contractObj, typeContract));
+        insert(trigger);
+end;
+
+/**
+Rule 16
+**/
+rule "Add insurance to Contract flow rule"
+    when
+        discriminatorObj: String()
+        contractObj : Contract()
+        eval(discriminatorObj == "firstRule")
+    then
+        String trigger = "secondRule";
+        insert(retriveInsurance(contractObj));
+        insert(trigger);
+end;
+
+/**
+Rule 17
+**/
+rule "Add products to insurance"
+    when
+        discriminatorObj: String()
+        contractObj : Contract()
+        eval(discriminatorObj == "secondRule")
+    then
+       String trigger = "thirdRule";
+       insert(retriveInsuranceProducts(contractObj));
+       insert(trigger);
+end;
+
+/**
+Rule 18
+**/
+rule "Add discount for products"
+    when
+        discriminatorObj: String()
+        contractObj : Contract()
+        eval(discriminatorObj == "thirdRule")
+    then
+        String trigger = "fourthRule";
+        insert(retriveContractWithDiscount(contractObj));
+        insert(trigger);
+end;
+
+/**
+Rule 19
+**/
+rule "Calculate contract payment"
+    when
+        discriminatorObj: String()
+        contractObj : Contract()
+        eval(discriminatorObj == "fourthRule")
+    then
+        System.out.println("Fifth Rule");
+        for (Insurance insurance : contractObj.getInsuranceSet()){
+            updateInsuranceTotalSum(insurance);
+        }
+        retract(contractObj);
+end;
+
+
+//rule 'Cleanup Contract'
+//salience -1000
+//when
+//    contractObj: Contract()
+//then
+//    retract(contractObj);
+//end
 
 
 function void checkForDueDateOnInsurance(Contract contract){
@@ -152,7 +294,21 @@ contract
         System.out.println("No active insurance on the contract!");
         }
         });
+        }
+
+function Set<NotificationPayment> retriveNotifications(Contract contract){
+Set<NotificationPayment> notificationPayments = new HashSet<>();
+        for(Insurance insurance: contract.getInsuranceSet()){
+        if(insurance.isActivePayment()){
+        NotificationPayment notificationPayment = new NotificationPayment();
+                notificationPayment.setInsurance(insurance);
+                notificationPayment.setDueDate(contract.getContractEndDate());
+                notificationPayments.add(notificationPayment);
+        }
+        }
+         return notificationPayments;
 }
+
 function boolean checkForActiveInsurance(Insurance insurance){
 return insurance.getInsuranceProducts().stream().anyMatch(Objects::nonNull);
 }
@@ -170,20 +326,17 @@ insurance.getInsuranceType() == Insurance.InsuranceType.PROPERTY).count();
 
 System.out.println("The contract has the followings: " + lifeInsurance + " " + vehicleInsurance + " "
 + propertyInsurance);
-//return Arrays.asList(lifeInsurance, propertyInsurance, vehicleInsurance);
 return (lifeInsurance >= 1 && vehicleInsurance >= 1) || (lifeInsurance >= 1 && propertyInsurance >= 1);
-
 }
 
 function void createDiscount(Contract contract, List insuranceType){
 contract.getInsuranceSet().forEach(insurance -> {
 Discount discount = new Discount();
-discount.setInsuranceSet(new HashSet<>(Collections.singletonList(insurance)));
-
 double life = (Double) insuranceType.get(0) * Util.LIFE_DISCOUNT;
 double veh = (Double) insuranceType.get(1) * Util.VEHICLE_DISCOUNT;
 double prop = (Double) insuranceType.get(2) * Util.PROPERTY_DISCOUNT;
 discount.setPercentage(life + veh + prop);
+discount.setInsurance(insurance);
 insurance.setDiscountSet(new HashSet<>(Collections.singletonList(discount)));
 });
 }
@@ -253,19 +406,158 @@ insuranceArray.add(propertyInsurance.doubleValue());
 return insuranceArray;
 }
 
-//
-//function void checkPaidInsurance(NotificationPayment notification){
-//
-//}
-//
-//function boolean disableInsuranceIfNotPaid(){
-//
-//}
-//
-//function void getPendingNotifications(){
-//
-//}
-//
-//function void doSomething(){
-//
-//}
+function void createNewPaymentRequest(Contract contract, Logger logger){
+contract.getInsuranceSet()
+.forEach(insurance -> {
+if(insurance.getNotificationPayment().getDueDate().after(new Date())){
+Payment paymentRequest = new Payment();
+paymentRequest.setInsurance(insurance);
+paymentRequest.setPaymentStatus(Payment.PaymentStatus.PENDING);
+switch (contract.getContractType()){
+case SMALL:
+paymentRequest.setValue(insurance.getSumInsured() + Util.CONTRACT_SMALL_FEE);
+break;
+case MEDIUM:
+paymentRequest.setValue(insurance.getSumInsured() + Util.CONTRACT_MEDIUM_FEE);
+break;
+case LONG:
+paymentRequest.setValue(insurance.getSumInsured() + Util.CONTRACT_LONG_FEE);
+break;
+}
+}
+});
+}
+
+function Set createNewPaymentRequest2(Contract contract, Logger logger){
+Set<Payment> payments = new HashSet<>();
+contract.getInsuranceSet()
+.forEach(insurance -> {
+SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+if(new Date().after(insurance.getNotificationPayment().getDueDate())){
+Payment paymentRequest = new Payment();
+paymentRequest.setInsurance(insurance);
+paymentRequest.setPaymentStatus(Payment.PaymentStatus.PENDING);
+switch (contract.getContractType()){
+case SMALL:
+paymentRequest.setValue(insurance.getSumInsured() + Util.CONTRACT_SMALL_FEE);
+break;
+case MEDIUM:
+paymentRequest.setValue(insurance.getSumInsured() + Util.CONTRACT_MEDIUM_FEE);
+break;
+case LONG:
+paymentRequest.setValue(insurance.getSumInsured() + Util.CONTRACT_LONG_FEE);
+break;
+}
+payments.add(paymentRequest);
+}
+});
+return payments;}
+
+function void clearPaymentOnContract(Set notificationObj){
+for(Object notification: notificationObj){
+NotificationPayment notificationPayment = (NotificationPayment) notification;
+//notificationPayment.getDueDate();
+}
+}
+
+function void suspendContract(Set payments, Logger logger){
+for(Object paymentObject : payments){
+Payment payment = (Payment) paymentObject;
+if(payment.getPaymentStatus() == Payment.PaymentStatus.PENDING && (new Date()
+.after(payment.getInsurance().getContract().getContractEndDate()))){
+Contract contract = payment.getInsurance().getContract();
+contract.setActive(false);
+}
+}
+}
+
+function Contract retriveContract(Contract contract, int type){
+Calendar calendar = Calendar.getInstance();
+calendar.add(Calendar.DATE, 12);
+contract.setId(1L);
+contract.setDateStart(new Date());
+contract.setEndDate(calendar.getTime());
+contract.setHolder(new Person(1L, "This is a new holder"));
+contract.setActive(false);
+contract.setDue(false);
+contract.setContractDiscount(0.0);
+switch (type){
+case 1: contract.setContractType(Contract.ContractType.SMALL);
+break;
+case 2: contract.setContractType(Contract.ContractType.MEDIUM);
+break;
+case 3: contract.setContractType(Contract.ContractType.LONG);
+break;
+}
+contract.setHasInsurance(false);
+return contract;
+}
+
+function Contract retriveInsurance(Contract contract){
+
+Set<Insurance> insuranceSet = new HashSet<>();
+Insurance firstInsurance = new Insurance();
+firstInsurance.setId(1L);
+firstInsurance.setContract(contract);
+firstInsurance.setActivePayment(false);
+firstInsurance.setSumInsured(0.0);
+firstInsurance.setNotificationPayment(null);
+firstInsurance.setNumber("1156");
+firstInsurance.setStatus(false);
+firstInsurance.setActivePayment(false);
+firstInsurance.setDiscountSet(null);
+firstInsurance.setInsuranceType(Insurance.InsuranceType.VEHICLE);
+
+Insurance secondInsurance = new Insurance();
+secondInsurance.setId(2L);
+secondInsurance.setContract(contract);
+secondInsurance.setActivePayment(false);
+secondInsurance.setSumInsured(0.0);
+secondInsurance.setNotificationPayment(null);
+secondInsurance.setNumber("1157");
+secondInsurance.setStatus(false);
+secondInsurance.setActivePayment(false);
+secondInsurance.setDiscountSet(null);
+secondInsurance.setInsuranceType(Insurance.InsuranceType.LIFE);
+
+insuranceSet.add(firstInsurance);
+insuranceSet.add(secondInsurance);
+contract.setInsuranceSet(insuranceSet);
+return contract;
+}
+
+function Contract retriveInsuranceProducts(Contract contract){
+for(Insurance insurance : contract.getInsuranceSet()){
+InsuranceProduct firstInsuranceProduct = new InsuranceProduct();
+firstInsuranceProduct.setId(1L);
+firstInsuranceProduct.setInsurance(insurance);
+firstInsuranceProduct.setProduct(new Product(1L, "Life product", Product.ProductType.LIFE, Sets.newHashSet(firstInsuranceProduct), 25.0));
+firstInsuranceProduct.setSumInsured(45);
+InsuranceProduct secondInsuranceProduct = new InsuranceProduct();
+secondInsuranceProduct.setId(2L);
+secondInsuranceProduct.setInsurance(insurance);
+secondInsuranceProduct.setSumInsured(65);
+secondInsuranceProduct.setProduct(new Product(2L, "Vehicle", Product.ProductType.VEHICLE, Sets.newHashSet(secondInsuranceProduct), 45.0));
+insurance.setInsuranceProducts(Sets.newHashSet(firstInsuranceProduct, secondInsuranceProduct));
+}
+return contract;
+}
+
+function Contract retriveContractWithDiscount(Contract contract){
+Set<Discount> discounts = new HashSet<>();
+for (Insurance insurance: contract.getInsuranceSet()){
+     int id = 0;
+     Discount discount = new Discount(id++, 0.0, insurance);
+     switch (insurance.getInsuranceType()){
+     case LIFE: discount.setPercentage(discount.getPercentage() + Util.LIFE_DISCOUNT);
+     break;
+     case VEHICLE: discount.setPercentage(discount.getPercentage() + Util.VEHICLE_DISCOUNT);
+     break;
+     case PROPERTY: discount.setPercentage(discount.getPercentage() + Util.PROPERTY_DISCOUNT);
+     break;
+     }
+     discounts.add(discount);
+   insurance.setDiscountSet(discounts);
+}
+return contract;
+}

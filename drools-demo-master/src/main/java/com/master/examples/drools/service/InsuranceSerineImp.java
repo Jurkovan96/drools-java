@@ -55,4 +55,8 @@ public class InsuranceSerineImp implements CRUDService {
             return Optional.empty();
         }
     }
+
+    public void save(Insurance insuranceObj) {
+        insuranceRepository.save(insuranceObj);
+    }
 }

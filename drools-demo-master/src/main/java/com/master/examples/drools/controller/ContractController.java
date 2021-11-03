@@ -1,5 +1,7 @@
 package com.master.examples.drools.controller;
 
+import com.master.examples.drools.model.Contract;
+import com.master.examples.drools.model.NotificationPayment;
 import com.master.examples.drools.service.ContarctServiceImp;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
@@ -11,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -39,6 +43,8 @@ public class ContractController {
                 .filter(Objects::nonNull)
                 .peek(contract -> {
                     kieSession.insert(contract);
+                    kieSession.insert("allContracts");
+                    kieSession.insert(logger);
                     kieSession.fireAllRules();
                     kieSession.dispose();
                     logger.info("KieSession {}", kieSession.getClass().getName());
@@ -47,17 +53,38 @@ public class ContractController {
     }
 
     @GetMapping("/contract/{contractId}")
-    public ResponseEntity<?> getContractById(@PathVariable long contractId) {
+    public ResponseEntity<?> getContractById(@PathVariable long contractId,
+                                             @RequestParam(name = "insert", required = false) boolean insert) {
         KieSession kieSession = kieContainer.newKieSession();
+        Set<NotificationPayment> notificationSet = new HashSet<>();
+        kieSession.setGlobal("newSet", notificationSet);
         return contarctServiceImp
                 .getById(contractId)
                 .map(contract -> {
                     kieSession.insert(contract);
+                    kieSession.insert("contract");
+                    kieSession.insert(logger);
                     kieSession.fireAllRules();
                     kieSession.dispose();
+                    if (insert) {
+                        contarctServiceImp.save(contract);
+                    }
                     return ResponseEntity.ok().body(contract);
                 })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .build());
     }
+
+    @PostMapping("/add/new/contract")
+    public ResponseEntity<?> getNewContractFromDRL(@RequestParam(name = "insert", required = false) boolean insert){
+        KieSession kieSession = kieContainer.newKieSession();
+        Contract contract = new Contract();
+        kieSession.insert(contract);
+        kieSession.insert("start");
+        kieSession.insert(1);
+        kieSession.fireAllRules();
+        kieSession.dispose();
+        return ResponseEntity.status(HttpStatus.CREATED).body(contract);
+    }
+
 }

@@ -13,7 +13,6 @@ import java.util.Set;
 
 @Entity
 @Builder(access = AccessLevel.PUBLIC, toBuilder = true)
-@AllArgsConstructor
 public class Product {
 
     public enum ProductType {
@@ -38,6 +37,14 @@ public class Product {
     private Double productSum;
 
     public Product() {
+    }
+
+    public Product(long id, String productName, ProductType productType, Set<InsuranceProduct> insuranceSet, Double productSum) {
+        this.id = id;
+        this.productName = productName;
+        this.productType = productType;
+        this.insuranceSet = insuranceSet;
+        this.productSum = productSum;
     }
 
     public long getId() {

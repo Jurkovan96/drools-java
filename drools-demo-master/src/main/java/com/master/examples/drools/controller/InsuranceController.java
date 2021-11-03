@@ -34,22 +34,32 @@ public class InsuranceController {
     @GetMapping("/insurances")
     public Collection<?> getAllInsurance() {
         KieSession kieSession = kieContainer.newKieSession();
-        return insuranceSerineImp
-                .getAll()
-                .stream()
-                .filter(Objects::nonNull)
-                .peek(insurance -> {
-                    kieSession.insert(insurance);
-                    kieSession.insert(logger);
-                    kieSession.fireAllRules();
-                    kieSession.dispose();
-                })
-                .collect(Collectors.toList());
+//        return insuranceSerineImp
+//                .getAll()
+//                .stream()
+//                .filter(Objects::nonNull)
+//                .peek(insurance -> {
+//                    kieSession.insert(insurance);
+////                    kieSession.insert(logger);
+//                    kieSession.fireAllRules();
+//                    kieSession.dispose();
+//                })
+//                .collect(Collectors.toList());
+        for (Object insurance : insuranceSerineImp.getAll()) {
+            kieSession.insert(insurance);
+        }
+        kieSession.fireAllRules();
+        kieSession.dispose();
+        return insuranceSerineImp.getAll();
     }
 
     @PostMapping("/new/insurance/contract/{contractId}")
     public ResponseEntity<?> createNewInsurance(@PathVariable long contractId,
-                                                @RequestBody Insurance insurance) {
+                                                @RequestBody Insurance insurance,
+                                                @RequestParam(name = "insert", required = false) boolean insert) {
+        if (insert) {
+            insuranceSerineImp.save(insuranceSerineImp.addInsurance(insurance, contractId).get());
+        }
         return insuranceSerineImp.addInsurance(insurance, contractId)
                 .map(insuranceObj -> ResponseEntity.status(HttpStatus.CREATED).body(insuranceObj))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());

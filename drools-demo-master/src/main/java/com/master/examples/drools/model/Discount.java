@@ -16,15 +16,16 @@ public class Discount {
 
     private Double percentage;
 
-    @ManyToMany(mappedBy = "discountSet")
-    private Set<Insurance> insuranceSet = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "insurance_id")
+    private Insurance insurance;
 
-    public void setInsuranceSet(Set<Insurance> insuranceSet) {
-        this.insuranceSet = insuranceSet;
+    public Insurance getInsurance() {
+        return insurance;
     }
 
-    public Set<Insurance> getInsuranceSet() {
-        return insuranceSet;
+    public void setInsurance(Insurance insurance) {
+        this.insurance = insurance;
     }
 
     public long getId() {
@@ -44,5 +45,11 @@ public class Discount {
     }
 
     public Discount() {
+    }
+
+    public Discount(long id, Double percentage, Insurance insurance) {
+        this.id = id;
+        this.percentage = percentage;
+        this.insurance = insurance;
     }
 }

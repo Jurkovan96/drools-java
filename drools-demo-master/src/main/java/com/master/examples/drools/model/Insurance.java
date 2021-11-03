@@ -29,11 +29,8 @@ public class Insurance {
     @Enumerated(EnumType.STRING)
     private InsuranceType insuranceType;
 
-    @ManyToMany
-    @JoinTable(name = "discount_insurance",
-            joinColumns = @JoinColumn(name = "discount_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "insurance_id", referencedColumnName = "id"))
-    @JsonIgnoreProperties("insuranceSet")
+    @OneToMany(mappedBy = "insurance")
+    @JsonIgnoreProperties("insurance")
     private Set<Discount> discountSet = new HashSet<>();
 
     private Double sumInsured;
@@ -137,5 +134,21 @@ public class Insurance {
                 ", status=" + status +
                 ", insuranceProducts=" + insuranceProducts +
                 '}';
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
+    }
+
+    public NotificationPayment getNotificationPayment() {
+        return notificationPayment;
+    }
+
+    public void setNotificationPayment(NotificationPayment notificationPayment) {
+        this.notificationPayment = notificationPayment;
     }
 }
