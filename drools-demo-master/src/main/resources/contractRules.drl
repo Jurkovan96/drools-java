@@ -42,7 +42,7 @@ rule "Check contract for any insurance"
     then
         contractObj.setHasInsurance(true);
         System.out.println("Rule 1 -----> Fired");
-//        retract(contractObj);
+
 end;
 
 /**
@@ -290,7 +290,9 @@ rule "Calculate contract payment"
         retract(contractObj);
 end;
 
-
+/**
+Rule 20
+**/
 rule 'Cleanup Contract'
         salience -1000
     when
