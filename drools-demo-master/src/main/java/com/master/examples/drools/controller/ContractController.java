@@ -37,19 +37,13 @@ public class ContractController {
     @GetMapping("/contracts")
     public Collection<?> getAllContracts(@RequestParam(name = "limit", required = false) Integer limit) {
         KieSession kieSession = kieContainer.newKieSession();
-        return contarctServiceImp
-                .getAll()
-                .stream()
-                .filter(Objects::nonNull)
-                .peek(contract -> {
-                    kieSession.insert(contract);
-                    kieSession.insert("allContracts");
-                    kieSession.insert(logger);
-                    kieSession.fireAllRules();
-                    kieSession.dispose();
-                    logger.info("KieSession {}", kieSession.getClass().getName());
-                })
-                .collect(Collectors.toList());
+        for (Object obj : contarctServiceImp.getAll()) {
+            kieSession.insert(obj);
+            kieSession.insert("allContracts");
+            kieSession.fireAllRules();
+        }
+        kieSession.dispose();
+        return contarctServiceImp.getAll();
     }
 
     @GetMapping("/contract/{contractId}")
@@ -63,7 +57,7 @@ public class ContractController {
                 .map(contract -> {
                     kieSession.insert(contract);
                     kieSession.insert("contract");
-                    kieSession.insert(logger);
+                    kieSession.insert("notifications");
                     kieSession.fireAllRules();
                     kieSession.dispose();
                     if (insert) {
@@ -76,7 +70,7 @@ public class ContractController {
     }
 
     @PostMapping("/add/new/contract")
-    public ResponseEntity<?> getNewContractFromDRL(@RequestParam(name = "insert", required = false) boolean insert){
+    public ResponseEntity<?> getNewContractFromDRL(@RequestParam(name = "insert", required = false) boolean insert) {
         KieSession kieSession = kieContainer.newKieSession();
         Contract contract = new Contract();
         kieSession.insert(contract);

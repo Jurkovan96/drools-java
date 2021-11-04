@@ -41,7 +41,8 @@ rule "Check contract for any insurance"
         eval(discriminatorObj == "allContracts")
     then
         contractObj.setHasInsurance(true);
-        retract(contractObj);
+        System.out.println("Rule 1 -----> Fired");
+//        retract(contractObj);
 end;
 
 /**
@@ -53,6 +54,7 @@ rule "Check insurance if active insurance"
         discriminatorObj : String()
         eval(checkForActiveInsurance(insuranceObj) == true && discriminatorObj == "contract")
     then
+        System.out.println("Rule 2 -----> Fired");
         insuranceObj.setActivePayment(true);
 end;
 
@@ -65,6 +67,7 @@ rule "Check for discount on contract"
         discriminatorObj : String()
         eval(checkForDiscount(contractObj) == true && discriminatorObj == "contract")
     then
+        System.out.println("Rule 3 -----> Fired");
         createDiscount(contractObj, determineContratDiscount(contractObj));
 end;
 
@@ -76,8 +79,9 @@ rule "Check if contract is due for notification"
     when
         contractObject : Contract()
         discriminatorObj : String()
-        eval(discriminatorObj == "ceva")
+        eval(discriminatorObj == "contract")
     then
+        System.out.println("Rule 4 -----> Fired");
         contractObject.setDue(true);
 end;
 
@@ -91,6 +95,7 @@ rule "Check contract for notification on insurance"
         discriminatorObj : String()
         eval(discriminatorObj == "notifications")
     then
+        System.out.println("Rule 5 -----> Fired");
         insert(retriveNotifications(contractObject));
 end;
 
@@ -102,6 +107,7 @@ rule "Add product minimum starting value for insurance type - TYPE.VEHICLE"
     when
         productObj : Product(productType == Product.ProductType.VEHICLE)
     then
+        System.out.println("Rule 6 -----> Fired");
         productObj.setProductSum(15.0);
 end;
 
@@ -112,6 +118,7 @@ rule "Add product minimum starting value for insurance type - TYPE.HOUSE"
     when
         productObj : Product(productType == Product.ProductType.HOUSE)
     then
+        System.out.println("Rule 7 -----> Fired");
         productObj.setProductSum(25.0);
 end;
 
@@ -122,7 +129,9 @@ rule "Add product minimum starting value for insurance type - TYPE.LIFE"
     when
         productObj : Product(productType == Product.ProductType.LIFE)
     then
+        System.out.println("Rule 8 -----> Fired");
         productObj.setProductSum(45.0);
+
 end;
 
 /**
@@ -134,6 +143,7 @@ rule "Calculate sum on InsuranceProduct level"
         discriminatorObj : String()
         eval(discriminatorObj == "insuranceProducts")
     then
+        System.out.println("Rule 9 -----> Fired");
         calculateSumOnInsuranceProduct(insuranceObj);
 
 end;
@@ -147,6 +157,7 @@ rule "Calculate the total sum on Insurance Object"
         discriminatorObj : String()
         eval(discriminatorObj == "insuranceSum")
     then
+        System.out.println("Rule 10 ----> Fired");
         updateInsuranceTotalSum(insuranceObj);
 end;
 
@@ -157,6 +168,7 @@ rule "Check for active contracts on holder's side"
     when
         personObj : Person(contractList != null)
     then
+        System.out.println("Rule 11 ----> Fired");
         personObj.setContractList(getActiveContractsForHolder(personObj));
 end;
 
@@ -170,6 +182,7 @@ rule "Create payment for insurance"
         contractObj : Contract(insuranceSet != null)
         loggerObj : Logger()
     then
+       System.out.println("Rule 12 ----> Fired");
        insert(createNewPaymentRequest2(contractObj, loggerObj));
 end;
 
@@ -182,6 +195,7 @@ rule "Check for contract suspention"
         paymentSet : Set(size() > 0)
         logger : Logger()
     then
+        System.out.println("Rule 13 ----> Fired");
         suspendContract(paymentSet, logger);
         retract(paymentSet);
 end;
@@ -194,6 +208,7 @@ rule "Test notification trigger"
     when
         notificationSetObj : Set(size() > 0)
     then
+        System.out.println("Rule 14 ----> Fired");
         clearPaymentOnContract(notificationSetObj);
 end;
 
@@ -208,6 +223,7 @@ rule "Start flow rule"
         typeContract : Integer()
 
     then
+        System.out.println("Rule 15 ----> Fired");
         String trigger = "firstRule";
         insert(retriveContract(contractObj, typeContract));
         insert(trigger);
@@ -222,6 +238,7 @@ rule "Add insurance to Contract flow rule"
         contractObj : Contract()
         eval(discriminatorObj == "firstRule")
     then
+        System.out.println("Rule 16 ----> Fired");
         String trigger = "secondRule";
         insert(retriveInsurance(contractObj));
         insert(trigger);
@@ -236,6 +253,7 @@ rule "Add products to insurance"
         contractObj : Contract()
         eval(discriminatorObj == "secondRule")
     then
+       System.out.println("Rule 17 ----> Fired");
        String trigger = "thirdRule";
        insert(retriveInsuranceProducts(contractObj));
        insert(trigger);
@@ -250,6 +268,7 @@ rule "Add discount for products"
         contractObj : Contract()
         eval(discriminatorObj == "thirdRule")
     then
+        System.out.println("Rule 18 ----> Fired");
         String trigger = "fourthRule";
         insert(retriveContractWithDiscount(contractObj));
         insert(trigger);
@@ -264,7 +283,7 @@ rule "Calculate contract payment"
         contractObj : Contract()
         eval(discriminatorObj == "fourthRule")
     then
-        System.out.println("Fifth Rule");
+        System.out.println("Rule 19 ----> Fired");
         for (Insurance insurance : contractObj.getInsuranceSet()){
             updateInsuranceTotalSum(insurance);
         }
@@ -272,13 +291,14 @@ rule "Calculate contract payment"
 end;
 
 
-//rule 'Cleanup Contract'
-//salience -1000
-//when
-//    contractObj: Contract()
-//then
-//    retract(contractObj);
-//end
+rule 'Cleanup Contract'
+        salience -1000
+    when
+        contractObj: Contract()
+    then
+        retract(contractObj);
+    System.out.println("Rule 20 ----> Fired");
+end
 
 
 function void checkForDueDateOnInsurance(Contract contract){
@@ -314,7 +334,6 @@ return insurance.getInsuranceProducts().stream().anyMatch(Objects::nonNull);
 }
 
 function boolean checkForDiscount(Contract contract){
-System.out.println("In discount method!--------------->");
 Long lifeInsurance = contract.getInsuranceSet().stream().filter(insurance ->
 insurance.getInsuranceType() == Insurance.InsuranceType.LIFE).count();
 
@@ -356,18 +375,14 @@ function void calculateSumOnInsuranceProduct(Insurance insurance){
 Double insuranceProductLevelSum = 0.0;
 for(InsuranceProduct insuranceProduct : insurance.getInsuranceProducts()){
 insuranceProductLevelSum = insuranceProduct.getProduct().getProductSum();
-System.out.println("In method calculateSumOnInsuranceProduct ------------------------> OK");
 switch (insurance.getInsuranceType()){
 case LIFE:
-System.out.println("On switch branch LIFE -------------> OK");
 insuranceProductLevelSum += 20.0;
 break;
 case VEHICLE:
-System.out.println("On switch branch VEHICLE ----------> OK");
 insuranceProductLevelSum += 25.0;
 break;
 case PROPERTY:
-System.out.println("On switch branch PROPERTY ---------> OK");
 insuranceProductLevelSum += 15.0;
 break;
 }
@@ -386,7 +401,6 @@ function Set<Contract> getActiveContractsForHolder(Person person){
 }
 
 function List determineContratDiscount(Contract contract){
-System.out.println("In discount method!--------------->");
 List<Double> insuranceArray = new ArrayList<>();
 Long lifeInsurance = contract.getInsuranceSet().stream().filter(insurance ->
 insurance.getInsuranceType() == Insurance.InsuranceType.LIFE).count();
@@ -456,7 +470,9 @@ return payments;}
 function void clearPaymentOnContract(Set notificationObj){
 for(Object notification: notificationObj){
 NotificationPayment notificationPayment = (NotificationPayment) notification;
-//notificationPayment.getDueDate();
+if(notification != null){
+((NotificationPayment) notification).getInsurance().getContract().setActive(false);
+}
 }
 }
 

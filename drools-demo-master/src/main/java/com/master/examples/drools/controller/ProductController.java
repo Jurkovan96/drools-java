@@ -24,12 +24,15 @@ public class ProductController {
     public ResponseEntity<?> addProduct(@RequestParam(name = "vehicle", required = false) boolean vehicle,
                                         @RequestParam(name = "property", required = false) boolean property,
                                         @RequestParam(name = "life", required = false) boolean life,
-                                        @RequestParam(name = "productName") String productName) {
+                                        @RequestParam(name = "productName") String productName,
+                                        @RequestParam(name = "insert", required = false) boolean insert) {
         Collection<Product> collection = (Collection<Product>) productServiceImp.addProducts(vehicle, property, life, productName);
         if (collection.size() == 0) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } else {
-            productServiceImp.saveProducts(collection);
+            if (insert) {
+                productServiceImp.saveProducts(collection);
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(collection);
         }
     }

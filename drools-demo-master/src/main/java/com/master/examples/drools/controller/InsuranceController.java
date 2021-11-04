@@ -34,21 +34,13 @@ public class InsuranceController {
     @GetMapping("/insurances")
     public Collection<?> getAllInsurance() {
         KieSession kieSession = kieContainer.newKieSession();
-//        return insuranceSerineImp
-//                .getAll()
-//                .stream()
-//                .filter(Objects::nonNull)
-//                .peek(insurance -> {
-//                    kieSession.insert(insurance);
-////                    kieSession.insert(logger);
-//                    kieSession.fireAllRules();
-//                    kieSession.dispose();
-//                })
-//                .collect(Collectors.toList());
         for (Object insurance : insuranceSerineImp.getAll()) {
             kieSession.insert(insurance);
+            kieSession.insert("insuranceProducts");
+            kieSession.insert("insuranceSum");
+            kieSession.insert("contract");
+            kieSession.fireAllRules();
         }
-        kieSession.fireAllRules();
         kieSession.dispose();
         return insuranceSerineImp.getAll();
     }
